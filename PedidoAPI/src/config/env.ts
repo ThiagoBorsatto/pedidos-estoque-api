@@ -24,9 +24,23 @@ function carregarArquivoEnv(): void {
 
 carregarArquivoEnv();
 
+/**
+ * Aceita a URL da API de Produtos com ou sem esquema. Hospedagens costumam
+ * injetar apenas o host ("produto-api.onrender.com") quando um servico aponta
+ * para o outro; nesse caso assumimos https.
+ */
+function normalizarUrl(valor: string): string {
+  const limpa = valor.trim().replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(limpa)) return limpa;
+
+  // localhost e IPs de rede local nao tem certificado: ficam em http
+  const ehRedeLocal = /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/i.test(limpa);
+  return `${ehRedeLocal ? 'http' : 'https'}://${limpa}`;
+}
+
 export const env = {
   porta: Number(process.env.PORT ?? 3000),
-  produtoApiUrl: (process.env.PRODUTO_API_URL ?? 'http://localhost:8080').replace(/\/+$/, ''),
+  produtoApiUrl: normalizarUrl(process.env.PRODUTO_API_URL ?? 'http://localhost:8080'),
   arquivoBanco: process.env.DATABASE_FILE ?? 'pedidos.db',
   timeoutProdutoApi: Number(process.env.PRODUTO_API_TIMEOUT_MS ?? 8000),
 };

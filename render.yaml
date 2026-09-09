@@ -1,0 +1,44 @@
+# Blueprint do Render (https://render.com) — sobe as duas APIs de uma vez.
+#
+# No Render: New > Blueprint > escolha este repositorio. Ele le este arquivo,
+# cria os dois servicos e ja aponta a API de Pedidos para a de Produtos.
+#
+# O plano free dorme depois de ~15 min sem acesso: no dia da apresentacao,
+# abra as duas URLs uns 3 minutos antes para elas acordarem.
+
+services:
+  # ---------------------------------------------------------- API de Produtos
+  - type: web
+    name: produto-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./ProdutoAPI/Dockerfile
+    dockerContext: ./ProdutoAPI
+    # o H2 e em memoria: cada reinicio recarrega os produtos de exemplo
+    healthCheckPath: /api/produtos
+
+  # ----------------------------------------------------------- API de Pedidos
+  - type: web
+    name: pedido-api
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./PedidoAPI/Dockerfile
+    dockerContext: ./PedidoAPI
+    # a raiz responde sempre; /health devolve 503 quando a API de Produtos esta
+    # dormindo, e o Render entenderia isso como servico quebrado
+    healthCheckPath: /
+    envVars:
+      # o Render preenche com o host do outro servico (produto-api.onrender.com)
+      - key: PRODUTO_API_URL
+        fromService:
+          type: web
+          name: produto-api
+          property: host
+      # disco efemero: /tmp e sempre gravavel
+      - key: DATABASE_FILE
+        value: /tmp/pedidos.db
+      # a API de Produtos no plano free pode demorar a acordar
+      - key: PRODUTO_API_TIMEOUT_MS
+        value: "60000"

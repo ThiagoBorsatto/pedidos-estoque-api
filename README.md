@@ -58,6 +58,58 @@ Comece pelo `00-fluxo-completo.http` e va clicando em **Send Request** de cima p
 ele encadeia as respostas (`{{pedidoCriado.response.body.pedido.id}}`), entao da para ver o
 efeito de um lado aparecendo no outro sem copiar id na mao.
 
+## Rodando as duas na nuvem (para a apresentacao)
+
+Quando as duas APIs precisam rodar em maquinas diferentes e a rede local nao deixa
+(sala de aula com isolamento entre os computadores, por exemplo), a saida e hospedar
+as duas: cada maquina so precisa de internet, e o teste passa a ser feito por HTTPS.
+
+O repositorio ja vem pronto para isso: um `Dockerfile` em cada API e um
+[`render.yaml`](render.yaml) que descreve os dois servicos.
+
+1. Crie uma conta gratuita em [render.com](https://render.com) (da para entrar com o GitHub)
+2. **New** > **Blueprint** > selecione este repositorio
+3. O Render le o `render.yaml`, cria `produto-api` e `pedido-api` e ja preenche a
+   variavel `PRODUTO_API_URL` da API de Pedidos com o endereco da API de Produtos
+4. Ao terminar, copie as duas URLs (algo como `https://produto-api-xxxx.onrender.com`)
+5. Nos arquivos `.http`, troque as variaveis do topo pelas URLs da nuvem — cada arquivo
+   ja tem as linhas prontas, e so comentar as de `localhost` e descomentar as de cima
+
+Assim voce pode abrir o VS Code em **qualquer** maquina, rodar os mesmos testes e ver
+uma API chamando a outra, sem depender da rede da sala.
+
+**Dois detalhes do plano gratuito:**
+
+- Os servicos **dormem apos ~15 minutos** sem acesso, e a API de Produtos (Java) leva
+  perto de um minuto para acordar. Abra as duas URLs no navegador uns 3 minutos antes
+  de apresentar; depois disso as respostas ficam rapidas.
+- Os bancos sao **efemeros**: quando um servico reinicia, os produtos de exemplo sao
+  recarregados e os pedidos se perdem. Para a demonstracao isso ate ajuda, porque cada
+  apresentacao comeca do mesmo estado.
+
+As URLs sao publicas e as APIs nao tem autenticacao — o que esta la sao os dados de
+exemplo da aula. Terminada a entrega, da para suspender os servicos no painel do Render.
+
+### Alternativa: as duas na mesma rede
+
+Se a rede da sala permitir, nao precisa de nuvem. O `ping` costuma estar bloqueado pelo
+firewall do Windows mesmo quando o HTTP funciona, entao vale testar direto:
+
+```powershell
+# na maquina que roda a API de Pedidos, apontando para a que roda a de Produtos
+Test-NetConnection -ComputerName 192.168.0.42 -Port 8080
+```
+
+Se conectar, basta criar um `.env` na pasta `PedidoAPI` com
+`PRODUTO_API_URL=http://192.168.0.42:8080`. Se nao conectar, libere a porta no firewall
+da maquina que hospeda a API de Produtos (PowerShell como administrador):
+
+```powershell
+New-NetFirewallRule -DisplayName "API Produtos 8080" -Direction Inbound -LocalPort 8080 -Protocol TCP -Action Allow
+```
+
+Continuando sem passar, a rede tem isolamento entre clientes e o caminho e a nuvem.
+
 ## O que o trabalho cobre
 
 - **Criar pedidos** com os produtos disponiveis, dando baixa no estoque da outra API
