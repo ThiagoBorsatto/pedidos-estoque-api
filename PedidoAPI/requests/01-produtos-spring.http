@@ -1,0 +1,84 @@
+# ==========================================================================
+#  LADO A - API de Produtos (Spring Boot, porta 8080)
+#  Aqui falamos DIRETO com a API de produtos, sem passar pela de pedidos.
+#  Serve para conferir o efeito real das operacoes feitas do outro lado.
+# ==========================================================================
+
+@produtoApi = http://localhost:8080
+
+
+### Listar todos os produtos (o estoque de verdade)
+GET {{produtoApi}}/api/produtos
+Accept: application/json
+
+
+### Filtrar por nome
+GET {{produtoApi}}/api/produtos?nome=mouse
+Accept: application/json
+
+
+### Buscar um produto pelo id
+GET {{produtoApi}}/api/produtos/1
+Accept: application/json
+
+
+### Produto inexistente -> 404 em application/problem+json
+GET {{produtoApi}}/api/produtos/999
+
+
+### Cadastrar um produto novo
+# @name produtoNovo
+POST {{produtoApi}}/api/produtos
+Content-Type: application/json
+
+{
+  "nome": "Headset gamer",
+  "descricao": "7.1, USB, com microfone",
+  "preco": 329.90,
+  "quantidade": 12
+}
+
+
+### Atualizar o produto recem-criado (PUT substitui TUDO)
+PUT {{produtoApi}}/api/produtos/{{produtoNovo.response.body.id}}
+Content-Type: application/json
+
+{
+  "nome": "Headset gamer",
+  "descricao": "7.1, USB, com microfone - reposicao de estoque",
+  "preco": 329.90,
+  "quantidade": 40
+}
+
+
+### Nome duplicado -> 409
+POST {{produtoApi}}/api/produtos
+Content-Type: application/json
+
+{
+  "nome": "Headset gamer",
+  "descricao": "tentativa de duplicar",
+  "preco": 10.00,
+  "quantidade": 1
+}
+
+
+### Validacao: preco zerado e nome vazio -> 400 com a lista de erros
+POST {{produtoApi}}/api/produtos
+Content-Type: application/json
+
+{
+  "nome": "",
+  "descricao": "produto invalido",
+  "preco": 0,
+  "quantidade": -5
+}
+
+
+### Excluir o produto criado
+DELETE {{produtoApi}}/api/produtos/{{produtoNovo.response.body.id}}
+
+
+### Console do banco H2 (abra no navegador)
+# http://localhost:8080/h2-console
+# JDBC URL: jdbc:h2:mem:auladb   |   usuario: sa   |   senha: (vazia)

@@ -1,0 +1,185 @@
+# ==========================================================================
+#  LADO B - API de Pedidos (Node + TypeScript, porta 3000)
+#  Todo endpoint de estoque daqui conversa com a API de Produtos por HTTP.
+# ==========================================================================
+
+@pedidoApi  = http://localhost:3000
+@produtoApi = http://localhost:8080
+
+
+### Documentacao viva: a raiz lista todos os endpoints
+GET {{pedidoApi}}/
+
+
+### Saude da API + conexao com a API de Produtos
+GET {{pedidoApi}}/health
+
+
+# --------------------------------------------------------------------------
+#  ESTOQUE
+# --------------------------------------------------------------------------
+
+### Consultar o estoque em formato de lista
+GET {{pedidoApi}}/api/estoque
+Accept: application/json
+
+
+### Somente os produtos com saldo (o que da para vender agora)
+GET {{pedidoApi}}/api/estoque?disponiveis=true
+
+
+### Filtrar por nome
+GET {{pedidoApi}}/api/estoque?nome=teclado
+
+
+### Estoque de um produto especifico
+GET {{pedidoApi}}/api/estoque/1
+
+
+### Atualizar estoque: definir a quantidade FINAL
+PATCH {{pedidoApi}}/api/estoque/1
+Content-Type: application/json
+
+{
+  "quantidade": 50,
+  "motivo": "inventario mensal"
+}
+
+
+### Atualizar estoque: SOMAR unidades (entrada de mercadoria)
+PATCH {{pedidoApi}}/api/estoque/1
+Content-Type: application/json
+
+{
+  "ajuste": 15,
+  "motivo": "recebimento do fornecedor"
+}
+
+
+### Atualizar estoque: SUBTRAIR unidades (perda, avaria)
+PATCH {{pedidoApi}}/api/estoque/1
+Content-Type: application/json
+
+{
+  "ajuste": -5,
+  "motivo": "produtos avariados no transporte"
+}
+
+
+### Ajuste que deixaria o estoque negativo -> 409
+PATCH {{pedidoApi}}/api/estoque/1
+Content-Type: application/json
+
+{
+  "ajuste": -100000
+}
+
+
+### Corpo sem "quantidade" nem "ajuste" -> 400
+PATCH {{pedidoApi}}/api/estoque/1
+Content-Type: application/json
+
+{
+  "motivo": "esqueci de dizer o quanto"
+}
+
+
+### Cadastrar um produto novo (a PedidoAPI repassa para a API de Produtos)
+POST {{pedidoApi}}/api/estoque/produtos
+Content-Type: application/json
+
+{
+  "nome": "Webcam Full HD",
+  "descricao": "1080p, foco automatico",
+  "preco": 199.90,
+  "quantidade": 8
+}
+
+
+### Historico de movimentacoes (nosso banco local)
+GET {{pedidoApi}}/api/estoque/movimentacoes
+
+
+### Historico de um produto so
+GET {{pedidoApi}}/api/estoque/movimentacoes?produtoId=1&limite=10
+
+
+# --------------------------------------------------------------------------
+#  PEDIDOS
+# --------------------------------------------------------------------------
+
+### Criar pedido com varios itens
+# @name novoPedido
+POST {{pedidoApi}}/api/pedidos
+Content-Type: application/json
+
+{
+  "cliente": "Maria Silva",
+  "observacao": "entregar apos as 18h",
+  "itens": [
+    { "produtoId": 1, "quantidade": 1 },
+    { "produtoId": 2, "quantidade": 2 }
+  ]
+}
+
+
+### Conferir o efeito do lado do Spring
+GET {{produtoApi}}/api/produtos
+
+
+### Listar todos os pedidos
+GET {{pedidoApi}}/api/pedidos
+
+
+### Filtrar por status e por cliente
+GET {{pedidoApi}}/api/pedidos?status=CRIADO&cliente=maria
+
+
+### Numeros gerais
+GET {{pedidoApi}}/api/pedidos/resumo
+
+
+### Detalhar o pedido criado acima
+GET {{pedidoApi}}/api/pedidos/{{novoPedido.response.body.pedido.id}}
+
+
+### Pedido inexistente -> 404
+GET {{pedidoApi}}/api/pedidos/9999
+
+
+### Pedido sem itens -> 400
+POST {{pedidoApi}}/api/pedidos
+Content-Type: application/json
+
+{
+  "cliente": "Cliente Vazio",
+  "itens": []
+}
+
+
+### Produto que nao existe -> 404
+POST {{pedidoApi}}/api/pedidos
+Content-Type: application/json
+
+{
+  "cliente": "Cliente Perdido",
+  "itens": [
+    { "produtoId": 12345, "quantidade": 1 }
+  ]
+}
+
+
+### Cancelar: devolve o estoque mas mantem o pedido no historico
+POST {{pedidoApi}}/api/pedidos/{{novoPedido.response.body.pedido.id}}/cancelamento
+
+
+### Cancelar de novo -> 409 (o estoque nao volta duas vezes)
+POST {{pedidoApi}}/api/pedidos/{{novoPedido.response.body.pedido.id}}/cancelamento
+
+
+### Excluir de vez (se ja estava cancelado, nada e devolvido outra vez)
+DELETE {{pedidoApi}}/api/pedidos/{{novoPedido.response.body.pedido.id}}
+
+
+### Conferir o estoque final do lado do Spring
+GET {{produtoApi}}/api/produtos

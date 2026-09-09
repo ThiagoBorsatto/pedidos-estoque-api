@@ -1,0 +1,19 @@
+{
+  "java.compile.nullAnalysis.mode": "automatic",
+
+  // Ambientes do REST Client: troque no canto inferior direito do VS Code
+  // (ou Ctrl+Alt+E) para apontar os arquivos .http para outra maquina/porta.
+  "rest-client.environmentVariables": {
+    "$shared": {
+      "produtoApi": "http://localhost:8080",
+      "pedidoApi": "http://localhost:3000"
+    },
+    "local": {
+      "produtoApi": "http://localhost:8080",
+      "pedidoApi": "http://localhost:3000"
+    }
+  },
+
+  "rest-client.previewResponseInUntitledDocument": false,
+  "rest-client.enableTelemetry": false
+}

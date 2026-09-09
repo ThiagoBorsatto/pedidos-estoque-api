@@ -1,0 +1,37 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. ProdutoAPI (Spring :8080)",
+      "type": "shell",
+      "command": ".\\mvnw spring-boot:run",
+      "options": { "cwd": "${workspaceFolder}/ProdutoAPI" },
+      "isBackground": true,
+      "presentation": { "group": "apis", "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "2. PedidoAPI (Node :3000)",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/PedidoAPI" },
+      "isBackground": true,
+      "presentation": { "group": "apis", "panel": "dedicated", "reveal": "always" },
+      "problemMatcher": []
+    },
+    {
+      "label": "Subir tudo (Produtos + Pedidos)",
+      "dependsOn": ["1. ProdutoAPI (Spring :8080)", "2. PedidoAPI (Node :3000)"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Menu do terminal",
+      "type": "shell",
+      "command": "npm run menu",
+      "options": { "cwd": "${workspaceFolder}/PedidoAPI" },
+      "presentation": { "panel": "dedicated", "reveal": "always", "focus": true },
+      "problemMatcher": []
+    }
+  ]
+}

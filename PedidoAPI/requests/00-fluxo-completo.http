@@ -1,0 +1,136 @@
+# ==========================================================================
+#  FLUXO COMPLETO - os dois lados conversando
+#  Extensao: REST Client (humao.rest-client)
+#
+#  Como usar: clique em "Send Request" acima de cada bloco, DE CIMA PARA BAIXO.
+#  Cada passo mostra o que uma API responde e o efeito na outra.
+#
+#  Antes de comecar, suba as duas:
+#    ProdutoAPI (Spring) ->  cd ProdutoAPI  &&  .\mvnw spring-boot:run     (8080)
+#    PedidoAPI  (Node)   ->  cd PedidoAPI   &&  npm run dev                (3000)
+# ==========================================================================
+
+@produtoApi = http://localhost:8080
+@pedidoApi  = http://localhost:3000
+
+
+### -------------------------------------------------------------------------
+### PASSO 0 | As duas APIs estao no ar?
+### A PedidoAPI responde por ela mesma E pela API de Produtos.
+### -------------------------------------------------------------------------
+GET {{pedidoApi}}/health
+
+
+### -------------------------------------------------------------------------
+### PASSO 1 | LADO A (Spring): estoque cru, direto na fonte
+### -------------------------------------------------------------------------
+GET {{produtoApi}}/api/produtos
+Accept: application/json
+
+
+### -------------------------------------------------------------------------
+### PASSO 2 | LADO B (Node): o MESMO estoque, visto pela API de Pedidos
+### Repare nos campos extras: situacao, reservadoEmPedidos, valorEmEstoque.
+### -------------------------------------------------------------------------
+# @name estoqueAntes
+GET {{pedidoApi}}/api/estoque
+Accept: application/json
+
+
+### -------------------------------------------------------------------------
+### PASSO 3 | Guardando o estoque do produto 1 ANTES do pedido
+### (olhe o campo "quantidade" na resposta e anote mentalmente)
+### -------------------------------------------------------------------------
+GET {{produtoApi}}/api/produtos/1
+
+
+### -------------------------------------------------------------------------
+### PASSO 4 | LADO B: criar um pedido
+### A PedidoAPI vai, por baixo dos panos:
+###   GET  {{produtoApi}}/api/produtos/1   -> confere preco e saldo
+###   PUT  {{produtoApi}}/api/produtos/1   -> baixa o estoque
+### -------------------------------------------------------------------------
+# @name pedidoCriado
+POST {{pedidoApi}}/api/pedidos
+Content-Type: application/json
+
+{
+  "cliente": "Thiago",
+  "observacao": "primeiro pedido de teste",
+  "itens": [
+    { "produtoId": 1, "quantidade": 2 },
+    { "produtoId": 2, "quantidade": 3 }
+  ]
+}
+
+
+### -------------------------------------------------------------------------
+### PASSO 5 | LADO A: o estoque no Spring MUDOU sozinho
+### O produto 1 tem 2 unidades a menos, o produto 2 tem 3 a menos.
+### -------------------------------------------------------------------------
+GET {{produtoApi}}/api/produtos
+
+
+### -------------------------------------------------------------------------
+### PASSO 6 | LADO B: o pedido gravado no banco da PedidoAPI
+### O id vem da resposta do PASSO 4 (encadeamento do REST Client).
+### -------------------------------------------------------------------------
+GET {{pedidoApi}}/api/pedidos/{{pedidoCriado.response.body.pedido.id}}
+
+
+### -------------------------------------------------------------------------
+### PASSO 7 | Tentando estourar o estoque de proposito -> 409
+### Peca uma quantidade absurda e veja a regra de negocio barrar.
+### -------------------------------------------------------------------------
+POST {{pedidoApi}}/api/pedidos
+Content-Type: application/json
+
+{
+  "cliente": "Cliente Guloso",
+  "itens": [
+    { "produtoId": 1, "quantidade": 9999 }
+  ]
+}
+
+
+### -------------------------------------------------------------------------
+### PASSO 8 | Pedido com DOIS itens onde o segundo estoura (teste do rollback)
+### O item 1 chega a ser baixado e depois DEVOLVIDO automaticamente.
+### Confira no PASSO 9 que o estoque do produto 1 nao mudou.
+### -------------------------------------------------------------------------
+POST {{pedidoApi}}/api/pedidos
+Content-Type: application/json
+
+{
+  "cliente": "Teste de rollback",
+  "itens": [
+    { "produtoId": 1, "quantidade": 1 },
+    { "produtoId": 3, "quantidade": 9999 }
+  ]
+}
+
+
+### -------------------------------------------------------------------------
+### PASSO 9 | LADO A: estoque intacto (o rollback funcionou)
+### -------------------------------------------------------------------------
+GET {{produtoApi}}/api/produtos/1
+
+
+### -------------------------------------------------------------------------
+### PASSO 10 | LADO B: EXCLUIR o pedido -> o estoque volta
+### A resposta lista item a item: saldoAntes -> saldoDepois.
+### -------------------------------------------------------------------------
+DELETE {{pedidoApi}}/api/pedidos/{{pedidoCriado.response.body.pedido.id}}
+
+
+### -------------------------------------------------------------------------
+### PASSO 11 | LADO A: confirme no Spring que tudo voltou ao que era
+### Compare com o PASSO 1: os numeros devem ser identicos.
+### -------------------------------------------------------------------------
+GET {{produtoApi}}/api/produtos
+
+
+### -------------------------------------------------------------------------
+### PASSO 12 | A trilha de auditoria: quem tirou e quem devolveu
+### -------------------------------------------------------------------------
+GET {{pedidoApi}}/api/estoque/movimentacoes

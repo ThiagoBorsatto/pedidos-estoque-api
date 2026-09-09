@@ -1,0 +1,15 @@
+# Node (PedidoAPI)
+node_modules/
+dist/
+*.db
+*.db-wal
+*.db-shm
+.env
+
+# Java (ProdutoAPI)
+target/
+.mvn/wrapper/maven-wrapper.jar
+
+# Sistema
+Thumbs.db
+.DS_Store
