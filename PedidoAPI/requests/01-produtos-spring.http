@@ -6,10 +6,10 @@
 
 # --- Onde a API de Produtos esta rodando ----------------------------------
 # Local:
-@produtoApi = http://localhost:8080
+#@produtoApi = http://localhost:8080
 #
 # Na nuvem (apresentacao): comente a linha acima e use a URL do Render:
-# @produtoApi = https://produto-api-XXXX.onrender.com
+@produtoApi = https://produto-api-r866.onrender.com
 #
 # Outra maquina na mesma rede: use o IP dela, ex http://192.168.0.42:8080
 # --------------------------------------------------------------------------

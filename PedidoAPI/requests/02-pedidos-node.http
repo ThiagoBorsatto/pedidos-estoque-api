@@ -5,13 +5,13 @@
 
 # --- Onde as APIs estao rodando -------------------------------------------
 # Local (as duas na sua maquina):
-@produtoApi = http://localhost:8080
-@pedidoApi  = http://localhost:3000
+# @produtoApi = http://localhost:8080
+# @pedidoApi  = http://localhost:3000
 #
 # Na nuvem (apresentacao): comente as duas linhas acima, descomente estas e
 # troque pelas URLs que o Render mostrar:
-# @produtoApi = https://produto-api-XXXX.onrender.com
-# @pedidoApi  = https://pedido-api-XXXX.onrender.com
+@produtoApi = https://produto-api-r866.onrender.com
+@pedidoApi  = https://pedido-api-3mp8.onrender.com
 #
 # Outra maquina na mesma rede: use o IP dela, ex http://192.168.0.42:8080
 # --------------------------------------------------------------------------
