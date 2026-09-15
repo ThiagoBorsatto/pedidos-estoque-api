@@ -12,6 +12,16 @@ app.listen(env.porta, async () => {
   console.log(`  -> API de Produtos: ${env.produtoApiUrl}`);
   console.log(`  -> banco de pedidos: ${env.arquivoBanco}`);
 
+  // Hospedagens as vezes injetam so o nome interno do servico ("produto-api-r866"):
+  // sem dominio nenhuma DNS resolve, e o erro que aparece e um "fetch failed" seco.
+  const host = new URL(env.produtoApiUrl).hostname;
+  if (!host.includes('.') && host !== 'localhost') {
+    console.log(
+      `  -> ATENCAO: "${host}" nao parece um endereco completo. Use a URL publica` +
+        ' da API de Produtos (ex.: https://produto-api-xxxx.onrender.com).',
+    );
+  }
+
   const noAr = await produtoClient.estaNoAr();
   console.log(
     noAr

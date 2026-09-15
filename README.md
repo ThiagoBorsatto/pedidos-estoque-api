@@ -69,10 +69,15 @@ O repositorio ja vem pronto para isso: um `Dockerfile` em cada API e um
 
 1. Crie uma conta gratuita em [render.com](https://render.com) (da para entrar com o GitHub)
 2. **New** > **Blueprint** > selecione este repositorio
-3. O Render le o `render.yaml`, cria `produto-api` e `pedido-api` e ja preenche a
-   variavel `PRODUTO_API_URL` da API de Pedidos com o endereco da API de Produtos
+3. O Render le o `render.yaml`, cria `produto-api` e `pedido-api` e **pergunta o valor
+   de `PRODUTO_API_URL`**. Como a URL da `produto-api` so existe depois que ela e criada,
+   deixe qualquer coisa nesse momento (ex.: `http://localhost:8080`) e ajuste no passo 5
 4. Ao terminar, copie as duas URLs (algo como `https://produto-api-xxxx.onrender.com`)
-5. Nos arquivos `.http`, troque as variaveis do topo pelas URLs da nuvem — cada arquivo
+5. Abra **pedido-api > Environment**, coloque em `PRODUTO_API_URL` a URL publica **completa**
+   da `produto-api` (com `https://` e com `.onrender.com`) e salve — o Render reinicia o
+   servico sozinho. Sem o dominio completo a API de Pedidos responde
+   `502 Falha ao falar com a API de Produtos`
+6. Nos arquivos `.http`, troque as variaveis do topo pelas URLs da nuvem — cada arquivo
    ja tem as linhas prontas, e so comentar as de `localhost` e descomentar as de cima
 
 Assim voce pode abrir o VS Code em **qualquer** maquina, rodar os mesmos testes e ver

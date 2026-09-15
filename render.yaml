@@ -1,7 +1,10 @@
 # Blueprint do Render (https://render.com) — sobe as duas APIs de uma vez.
 #
-# No Render: New > Blueprint > escolha este repositorio. Ele le este arquivo,
-# cria os dois servicos e ja aponta a API de Pedidos para a de Produtos.
+# No Render: New > Blueprint > escolha este repositorio. Ele le este arquivo e
+# cria os dois servicos.
+#
+# Depois de criados, copie a URL publica da produto-api e coloque em
+# pedido-api > Environment > PRODUTO_API_URL (veja o comentario la embaixo).
 #
 # O plano free dorme depois de ~15 min sem acesso: no dia da apresentacao,
 # abra as duas URLs uns 3 minutos antes para elas acordarem.
@@ -30,12 +33,17 @@ services:
     # dormindo, e o Render entenderia isso como servico quebrado
     healthCheckPath: /
     envVars:
-      # o Render preenche com o host do outro servico (produto-api.onrender.com)
+      # Preenchida a mao com a URL PUBLICA da produto-api
+      # (ex.: https://produto-api-r866.onrender.com).
+      #
+      # Nao da para usar `fromService`: ele devolve o nome interno do servico
+      # ("produto-api-r866", sem dominio), e a rede interna do Render nao acorda
+      # um servico free que esta dormindo — so a chamada externa por HTTPS acorda.
+      #
+      # `sync: false` faz o Render perguntar o valor ao criar o Blueprint; depois
+      # da para editar em pedido-api > Environment.
       - key: PRODUTO_API_URL
-        fromService:
-          type: web
-          name: produto-api
-          property: host
+        sync: false
       # disco efemero: /tmp e sempre gravavel
       - key: DATABASE_FILE
         value: /tmp/pedidos.db
